@@ -104,6 +104,9 @@ curl -X GET localhost:9200
 
 ![альт](https://i.ibb.co/kJ8ZWm9/Screenshot-6.jpg)
 
+
+![альт](https://i.ibb.co/M8wmmSq/Screenshot-15.jpg)
+
 ---
 ### Задача 2
 
@@ -218,19 +221,20 @@ curl -X GET 'http://localhost:9200/_cat/indices?v'
 восстанавливать индексы из бэкапов
 Создайте директорию {путь до корневой директории с elasticsearch в образе}/snapshots.
 
-Используя API [зарегистрируйте](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-register-repository.html#snapshots-register-repository) данную директорию как `snapshot repository` c `именем netology_backup`.
+* Используя API [зарегистрируйте](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-register-repository.html#snapshots-register-repository) данную директорию как `snapshot repository` c именем `netology_backup`.
 
 Приведите в ответе запрос API и результат вызова API для создания репозитория.
 
-Создайте индекс test с 0 реплик и 1 шардом и приведите в ответе список индексов.
+* Создайте индекс `test` с `0` реплик и `1` шардом и приведите в ответе список индексов.
 
-[Создайте snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-take-snapshot.html) состояния кластера `elasticsearch`.
+* [Создайте snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-take-snapshot.html) состояния кластера `elasticsearch`.
 
 Приведите в ответе список файлов в директории со snapshotами.
 
-Удалите индекс `test` и создайте индекс `test-2`. Приведите в ответе список индексов.
+* Удалите индекс `test` и создайте индекс `test-2`. 
+Приведите в ответе список индексов.
 
-[Восстановите](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-restore-snapshot.html) состояние кластера elasticsearch из snapshot, созданного ранее.
+* [Восстановите](https://www.elastic.co/guide/en/elasticsearch/reference/current/snapshots-restore-snapshot.html) состояние кластера elasticsearch из snapshot, созданного ранее.
 
 Приведите в ответе запрос к API восстановления и итоговый список индексов.
 
@@ -239,6 +243,89 @@ curl -X GET 'http://localhost:9200/_cat/indices?v'
 * возможно вам понадобится доработать `elasticsearch.yml` в части директивы `path.repo` и перезапустить elasticsearch
 
 ***Ответ:***
+
+> Используя API зарегистрируйте данную директорию как snapshot repository c именем netology_backup.
+
+Итак, у нас конфигурация:
+![альт](https://i.ibb.co/dcfqtZ0/Screenshot-16.jpg)
+
+тогда
+```
+curl -XPOST localhost:9200/_snapshot/netology_backup?pretty -H 'Content-Type: application/json' -d'{"type": "fs", "settings": { "location":"/elasticsearch-7.14.0/snapshots" }}'
+```
+![альт](https://i.ibb.co/gSFqcWk/Screenshot-17.jpg)
+
+> Приведите в ответе запрос API и результат вызова API для создания репозитория.
+
+![альт](https://i.ibb.co/4p1yGb4/Screenshot-18.jpg)
+
+![альт](https://i.ibb.co/TYfTjhx/Screenshot-19.jpg)
+
+
+>Создайте индекс test с `0` реплик и `1` шардом и приведите в ответе список индексов.
+
+```
+curl -X PUT localhost:9200/test -H 'Content-Type: application/json' -d'{ "settings": { "number_of_shards": 1,  "number_of_replicas": 0 }}'
+```
+![альт](https://i.ibb.co/28PMC0x/Screenshot-20.jpg)
+
+Результат:
+
+![альт](https://i.ibb.co/x8VbSfD/Screenshot-21.jpg)
+
+
+> Создайте snapshot состояния кластера elasticsearch.
+```
+curl -X PUT localhost:9200/_snapshot/netology_backup/elasticsearch?wait_for_completion=true
+```
+![альт](https://i.ibb.co/FDKZ8Cm/Screenshot-22.jpg)
+
+> Приведите в ответе список файлов в директории со snapshotами.
+```
+docker exec -i -t 14655b8d9b85 bash
+
+[elasticsearch@elastic elasticsearch]$ cd /elasticsearch-7.14.0/snapshots
+[elasticsearch@elastic snapshots]$ pwd
+/elasticsearch-7.14.0/snapshots
+[elasticsearch@elastic snapshots]$ ls -la
+total 56
+drwxr-xr-x 1 elasticsearch elasticsearch  4096 Aug 16 20:42 .
+drwxr-xr-x 1 elasticsearch elasticsearch  4096 Aug 16 16:56 ..
+-rw-r--r-- 1 elasticsearch elasticsearch   831 Aug 16 20:42 index-0
+-rw-r--r-- 1 elasticsearch elasticsearch     8 Aug 16 20:42 index.latest
+drwxr-xr-x 4 elasticsearch elasticsearch  4096 Aug 16 20:42 indices
+-rw-r--r-- 1 elasticsearch elasticsearch 27668 Aug 16 20:42 meta-Y7Kh2G2OTvCYhsPlZ7Q67g.dat
+-rw-r--r-- 1 elasticsearch elasticsearch   440 Aug 16 20:42 snap-Y7Kh2G2OTvCYhsPlZ7Q67g.dat
+[elasticsearch@elastic snapshots]$
+
+```
+>Удалите индекс test и создайте индекс test-2. Приведите в ответе список индексов.
+
+Список индексов:
+![альт](https://i.ibb.co/VQDC7Tm/Screenshot-23.jpg)
+
+> Удаляем индекс `test`
+```
+curl -X DELETE 'http://localhost:9200/test?pretty'
+```
+![альт](https://i.ibb.co/bXwbM1N/Screenshot-24.jpg)
+
+> создайте индекс test-2
+
+```
+curl -X PUT localhost:9200/test-2?pretty -H 'Content-Type: application/json' -d'{ "settings": { "number_of_shards": 1,  "number_of_replicas": 0 }}'
+```
+![альт](https://i.ibb.co/LYzvxj5/Screenshot-25.jpg)
+
+> Список индексов
+```
+curl -X GET http://localhost:9200/_cat/indices?v
+```
+
+![альт](https://i.ibb.co/TRDTn30/Screenshot-26.jpg)
+
+![альт](https://i.ibb.co/jbg3wgL/Screenshot-27.jpg)
+
 
 ---
 
