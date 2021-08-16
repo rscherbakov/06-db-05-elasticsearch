@@ -1,4 +1,3 @@
-# netology-6.5
 ## Домашнее задание к занятию "6.5. Elasticsearch"
 
 ### Задача 1
@@ -95,6 +94,16 @@ https://hub.docker.com/repository/docker/romrsch/elastic
 ![альт](https://i.ibb.co/C61fVJG/Screenshot-2.jpg)
 
 
+```
+docker run --rm --name elastic --hostname elastic  -ti -p 9200:9200 romrsch/elastic:6.5
+```
+ответ elasticsearch 
+```
+curl -X GET localhost:9200
+```
+
+![альт](https://i.ibb.co/kJ8ZWm9/Screenshot-6.jpg)
+
 ---
 ### Задача 2
 
@@ -127,6 +136,77 @@ https://hub.docker.com/repository/docker/romrsch/elastic
 При проектировании кластера elasticsearch нужно корректно рассчитывать количество реплик и шард, иначе возможна потеря данных индексов, вплоть до полной, при деградации системы.
 
 ***Ответ:***
+
+```
+docker run --rm --name elastic --hostname elastic  -ti -p 9200:9200 romrsch/elastic:6.5
+```
+![альт](https://i.ibb.co/b6KtY72/Screenshot-4.jpg)
+
+Создание индексов
+```
+curl -X PUT localhost:9200/ind-1 -H 'Content-Type: application/json' -d'{ "settings": { "number_of_shards": 1,  "number_of_replicas": 0 }}'
+curl -X PUT localhost:9200/ind-2 -H 'Content-Type: application/json' -d'{ "settings": { "number_of_shards": 2,  "number_of_replicas": 1 }}'
+curl -X PUT localhost:9200/ind-3 -H 'Content-Type: application/json' -d'{ "settings": { "number_of_shards": 4,  "number_of_replicas": 2 }}'    
+```
+![альт](https://i.ibb.co/rM8sgCX/Screenshot-7.jpg)
+
+
+>Получите список индексов и их статусов, используя API
+
+Список индексов:
+
+```
+curl -X GET 'http://localhost:9200/_cat/indices?v' 
+```
+![альт](https://i.ibb.co/nDMvgbd/Screenshot-8.jpg)
+
+Статус индексов:
+```
+curl -X GET 'http://localhost:9200/_cluster/health/ind-1?pretty'
+```
+![альт](https://i.ibb.co/BKMRVXf/Screenshot-9.jpg)
+
+```
+curl -X GET 'http://localhost:9200/_cluster/health/ind-2?pretty'
+```
+![альт](https://i.ibb.co/RpLLjb6/Screenshot-10.jpg)
+
+```
+curl -X GET 'http://localhost:9200/_cluster/health/ind-3?pretty' 
+```
+![альт](https://i.ibb.co/1fjXdyD/Screenshot-11.jpg)
+
+>Получите состояние кластера elasticsearch, используя API.
+
+```
+curl -XGET localhost:9200/_cluster/health/?pretty=true
+```
+![альт](https://i.ibb.co/28nTxK6/Screenshot-12.jpg)
+
+
+>Как вы думаете, почему часть индексов и кластер находится в состоянии yellow?
+
+Ответ: индексы `ind-2` и `ind-3` в статусе Yellow, т.к. мы их создали с указанием количеством реплик `1` и `2` , но у нас нет серверов куда можно эти данные синхронизировать. 
+
+
+
+> Удалите все индексы.
+
+```
+curl -X DELETE 'http://localhost:9200/ind-1?pretty'
+curl -X DELETE 'http://localhost:9200/ind-2?pretty'
+curl -X DELETE 'http://localhost:9200/ind-3?pretty'
+```
+![альт](https://i.ibb.co/stJjkPH/Screenshot-13.jpg)
+
+Проверка - Список индексов:
+```
+curl -X GET 'http://localhost:9200/_cat/indices?v'
+```
+![альт](https://i.ibb.co/QDGPVSF/Screenshot-14.jpg)
+
+
+
 
 ---
 
